@@ -1,26 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react';
+import { useConversationPolling } from './hooks/useConversationPolling';
+import { ConversationDisplay } from './components/ConversationDisplay';
+import { StatusIndicator } from './components/StatusIndicator';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { entries, isLoading, error } = useConversationPolling({
+    pollingInterval: 5000,
+    enabled: true,
+  });
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new entries arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [entries]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">
-        React + Tailwind CSS
-      </h1>
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <button
-          onClick={() => setCount((count) => count + 1)}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors"
+    <div className="min-h-screen bg-[#F4F6F8]">
+      {/* Header */}
+      <header className="bg-white sticky top-0 z-10 border-b-2 border-[#F7DB00]">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src="/inbest_logo.png" alt="Inbest Logo" className="h-10 w-auto" />
+              <div className="border-l-2 border-[#222222]/10 pl-4">
+                <h1 className="text-xl font-bold text-[#222222]">
+                  Inbest Agent
+                </h1>
+                <p className="text-sm text-[#222222]/60 font-medium">
+                  Helping People Maximise Their Income
+                </p>
+              </div>
+            </div>
+            <StatusIndicator isLoading={isLoading} error={error} entryCount={entries.length} />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div
+          ref={scrollRef}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl border border-[#222222]/5 p-6 min-h-[600px] max-h-[calc(100vh-220px)] overflow-y-auto shadow-lg shadow-[#0E1A2B]/5"
         >
-          Count is {count}
-        </button>
-        <p className="mt-4 text-gray-600 text-center">
-          Edit <code className="bg-gray-200 px-1 rounded">src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
+          <ConversationDisplay entries={entries} />
+        </div>
+
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
