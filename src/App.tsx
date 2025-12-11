@@ -10,13 +10,15 @@ function App() {
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevEntriesLengthRef = useRef(0);
 
-  // Auto-scroll to bottom when new entries arrive
+  // Auto-scroll to bottom only when new entries arrive
   useEffect(() => {
-    if (scrollRef.current) {
+    if (entries.length > prevEntriesLengthRef.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [entries]);
+    prevEntriesLengthRef.current = entries.length;
+  }, [entries.length]);
 
   return (
     <div className="min-h-screen bg-[#F4F6F8]">
