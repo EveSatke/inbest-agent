@@ -2,7 +2,6 @@
 
 A real-time conversational AI frontend that displays phone conversation transcriptions from ElevenLabs API.
 
-
 ## Tech Stack
 
 - **React 18** with TypeScript
@@ -26,6 +25,10 @@ cd inbest-agent
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your API URLs
+
 # Start development server
 npm run dev
 ```
@@ -41,16 +44,16 @@ npm run preview
 
 ## Configuration
 
-The app connects to an API endpoint for conversation data. The API proxy is configured in `vite.config.ts`:
+### Environment Variables
 
-```typescript
-server: {
-  proxy: {
-    '/api/conversation': {
-      target: 'https://your-api-endpoint.com',
-      changeOrigin: true,
-      rewrite: () => '/conversation',
-    },
-  },
-},
+Create a `.env` file in the root directory with the following variables:
+
+```env
+VITE_API_URL=https://your-api-endpoint.ngrok-free.dev
+VITE_ALLOWED_HOST=your-frontend.ngrok-free.dev
 ```
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | The backend API URL that serves conversation data |
+| `VITE_ALLOWED_HOST` | (Optional) Allowed host for network access via ngrok |
