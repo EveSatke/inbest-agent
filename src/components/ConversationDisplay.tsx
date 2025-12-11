@@ -33,6 +33,34 @@ function getConversationalQuestion(technical: string): string {
   return questionMap[key] || technical;
 }
 
+const numberWords: Record<number, string> = {
+  0: 'No',
+  1: 'One',
+  2: 'Two',
+  3: 'Three',
+  4: 'Four',
+  5: 'Five',
+  6: 'Six',
+  7: 'Seven',
+  8: 'Eight',
+  9: 'Nine',
+  10: 'Ten',
+  11: 'Eleven',
+  12: 'Twelve',
+};
+
+const housingTypes: Record<number | string, string> = {
+  1: 'Private rent',
+  2: 'Social rent',
+  3: 'Homeowner',
+  4: 'Living rent free',
+  5: 'Supported or exempt',
+  6: 'Boarder or lodger',
+  7: 'Homeless',
+  8: 'Temporary accommodation',
+  9: 'Shared ownership',
+};
+
 function formatAnswer(question: string, answer: string | boolean | number | null): string {
   if (answer === null) return '-';
   if (typeof answer === 'boolean') return answer ? 'Yes' : 'No';
@@ -45,6 +73,37 @@ function formatAnswer(question: string, answer: string | boolean | number | null
     if (!isNaN(num)) {
       return `£${num.toLocaleString()}`;
     }
+  }
+
+  // Format children count
+  if (q.includes('children')) {
+    const num = typeof answer === 'number' ? answer : parseInt(String(answer));
+    if (!isNaN(num)) {
+      if (num === 0) return 'No children';
+      if (num === 1) return 'One child';
+      const word = numberWords[num] || num.toString();
+      return `${word} children`;
+    }
+  }
+
+  // Format housing type
+  if (q.includes('housing')) {
+    return housingTypes[answer] || String(answer);
+  }
+
+  // Format relationship status
+  if (q.includes('relationship')) {
+    const status = String(answer).toLowerCase();
+    const statusMap: Record<string, string> = {
+      'single': 'Single',
+      'married': 'Married',
+      'divorced': 'Divorced',
+      'widowed': 'Widowed',
+      'separated': 'Separated',
+      'partner': 'Living with partner',
+      'cohabiting': 'Living with partner',
+    };
+    return statusMap[status] || String(answer).charAt(0).toUpperCase() + String(answer).slice(1);
   }
 
   return String(answer);
