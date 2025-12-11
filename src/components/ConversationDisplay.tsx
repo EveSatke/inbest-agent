@@ -22,11 +22,32 @@ const questionMap: Record<string, string> = {
   'date_of_birth': 'What is your date of birth?',
   'customer_age': 'How old are you?',
   'age': 'How old are you?',
+  'relationshipstatus': 'What is your relationship status?',
+  'childrennum': 'How many children do you have?',
+  'housingtype': 'What is your housing situation?',
+  'monthlyincomeamount': 'What is your monthly income?',
 };
 
 function getConversationalQuestion(technical: string): string {
   const key = technical.toLowerCase().trim();
   return questionMap[key] || technical;
+}
+
+function formatAnswer(question: string, answer: string | boolean | number | null): string {
+  if (answer === null) return '-';
+  if (typeof answer === 'boolean') return answer ? 'Yes' : 'No';
+
+  const q = question.toLowerCase();
+
+  // Format currency fields
+  if (q.includes('income') || q.includes('amount')) {
+    const num = typeof answer === 'number' ? answer : parseFloat(String(answer));
+    if (!isNaN(num)) {
+      return `£${num.toLocaleString()}`;
+    }
+  }
+
+  return String(answer);
 }
 
 function extractUserName(entries: QAEntry[]): string | null {
@@ -47,15 +68,26 @@ function isConfirmationEntry(entry: QAEntry): boolean {
   return q.includes('confirm') || q.includes('verified') || q.includes('data_confirmed');
 }
 
+function isEligibilityEntry(entry: QAEntry): boolean {
+  const q = entry.question.toLowerCase();
+  return q.includes('eligibilityamount') || q === 'eligibility' || q === 'benefit_amount';
+}
+
 export function ConversationDisplay({ entries }: ConversationDisplayProps) {
   const userName = extractUserName(entries);
   const [seenCount, setSeenCount] = useState(0);
   const isFirstRender = useRef(true);
 
-  // Separate conversation entries from confirmation
-  const conversationEntries = entries.filter(e => !isConfirmationEntry(e));
+  // Separate conversation entries from special entries, exclude null answers
+  const conversationEntries = entries.filter(e =>
+    !isConfirmationEntry(e) &&
+    !isEligibilityEntry(e) &&
+    e.answer !== null
+  );
   const confirmationEntry = entries.find(e => isConfirmationEntry(e));
   const isConfirmed = confirmationEntry?.answer === true || confirmationEntry?.answer === 'true';
+  const eligibilityEntry = entries.find(e => isEligibilityEntry(e));
+  const eligibilityAmount = eligibilityEntry?.answer;
 
   useEffect(() => {
     // On first render, mark all as seen immediately (no animation)
@@ -87,7 +119,7 @@ export function ConversationDisplay({ entries }: ConversationDisplayProps) {
     <div className="space-y-6">
       {conversationEntries.map((entry, index) => {
         const conversationalQuestion = getConversationalQuestion(entry.question);
-        const answerText = typeof entry.answer === 'boolean' ? (entry.answer ? 'Yes' : 'No') : entry.answer;
+        const answerText = formatAnswer(entry.question, entry.answer);
         const isNew = index >= seenCount;
 
         return (
@@ -137,6 +169,23 @@ export function ConversationDisplay({ entries }: ConversationDisplayProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
           <p className="text-sm font-medium">Details confirmed</p>
+        </div>
+      )}
+
+      {/* Eligibility Amount */}
+      {eligibilityAmount && (
+        <div className="mt-6 p-6 bg-gradient-to-br from-[#F7DB00]/10 to-[#F7DB00]/5 rounded-2xl border border-[#F7DB00]/20">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-[#222222]/60 uppercase tracking-wider mb-2">
+              Your Estimated Benefit
+            </p>
+            <p className="text-4xl font-bold text-[#222222]">
+              £{typeof eligibilityAmount === 'number' ? eligibilityAmount.toLocaleString() : eligibilityAmount}
+            </p>
+            <p className="text-sm text-[#222222]/50 mt-2">
+              per month
+            </p>
+          </div>
         </div>
       )}
     </div>
